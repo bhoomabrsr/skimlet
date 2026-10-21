@@ -15,6 +15,9 @@ assert.deepEqual(manifest.permissions, ['activeTab', 'debugger', 'tabGroups']);
 for (const path of [manifest.background.service_worker, manifest.action.default_icon, ...Object.values(manifest.icons)]) {
   assert.ok(readFileSync(new URL(`packages/extension/dist/${path}`, root)).length);
 }
+const storeIcon = readFileSync(new URL(`packages/extension/dist/${manifest.icons['128']}`, root));
+assert.equal(storeIcon.readUInt32BE(16), 128);
+assert.equal(storeIcon.readUInt32BE(20), 128);
 const code = readFileSync(new URL('packages/extension/dist/background.js', root), 'utf8');
 assert.ok(!/Playwriter|playwriter|process\.env/.test(code), 'The browser bundle must use Skimlet branding and no runtime environment');
 const hash = createHash('sha256').update(Buffer.from(manifest.key, 'base64')).digest('hex').slice(0, 32);

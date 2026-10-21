@@ -14,7 +14,8 @@ await build({ entryPoints: [join(source, 'background.ts')], outfile: join(output
   bundle: true, format: 'esm', platform: 'browser', target: 'chrome125',
   define: { SKIMLET_PROTOCOL_VERSION: JSON.stringify(pkg.version) },
 });
-await Promise.all(['on.png', 'off.png'].map(name => copyFile(join(source, 'assets/icons', name), join(output, 'icons', name))));
+await Promise.all(['on.png', 'off.png', 'store-128.png'].map(name =>
+  copyFile(join(source, 'assets/icons', name), join(output, 'icons', name))));
 await copyFile(join(source, 'assets/manifest.json'), join(output, 'manifest.json'));
 await mkdir(join(root, 'packages/mcp/assets'), { recursive: true });
 await copyFile(join(source, 'assets/manifest.json'), join(root, 'packages/mcp/assets/manifest.json'));
