@@ -13,6 +13,8 @@ const temp = await mkdtemp(join(tmpdir(), 'skimlet-packed-'));
 try {
   const [packed] = JSON.parse(execFileSync('npm', ['pack', '--json', '--workspace', '@bhoomabrsr/skimlet', '--pack-destination', temp], { cwd: root, encoding: 'utf8' }));
   assert.equal(packed.name, '@bhoomabrsr/skimlet');
+  assert.ok(packed.files.some(file => file.path === 'README.md'));
+  assert.ok(packed.files.some(file => file.path === 'LICENSE'));
   assert.ok(!packed.files.some(file => file.path.includes('skimlet-relay') || file.path.includes('UPSTREAM')));
   assert.ok(packed.files.some(file => file.path === 'assets/manifest.json'));
   execFileSync('npm', ['install', '--prefix', temp, '--no-audit', '--no-fund', join(temp, packed.filename)], { stdio: 'pipe' });

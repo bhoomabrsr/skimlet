@@ -2,10 +2,24 @@
   "name": "@bhoomabrsr/skimlet",
   "version": "0.2.0",
   "description": "Local Chrome-profile search and reading MCP server powered by Playwriter",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bhoomabrsr/skimlet"
+  },
   "type": "module",
-  "engines": { "node": ">=22" },
-  "bin": { "skimlet": "dist/mcp.js" },
-  "files": ["dist/mcp.js", "dist/adapters", "dist/url.js", "assets/manifest.json"],
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "skimlet": "dist/mcp.js"
+  },
+  "files": [
+    "dist/mcp.js",
+    "dist/adapters",
+    "dist/url.js",
+    "assets/manifest.json"
+  ],
   "scripts": {
     "start": "node dist/mcp.js",
     "check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --esModuleInterop --skipLibCheck mcp.ts",
@@ -13,7 +27,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@mozilla/readability": "0.6.0",
     "jsdom": "26.1.0",
     "p-limit": "7.2.0",
