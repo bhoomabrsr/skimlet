@@ -2,5 +2,6 @@ node_modules/
 packages/mcp/dist/
 packages/mcp/assets/
 packages/extension/dist/
+packages/extension/skimlet-chrome-store-*.zip
 .DS_Store
 *.tgz

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit -p tsconfig.json",
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "pack:store": "npm run build && node pack-store.mjs"
   },
   "devDependencies": {
     "@types/chrome": "0.0.320"
