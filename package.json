@@ -1,0 +1,27 @@
+{
+  "name": "skimlet-repo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/mcp",
+    "packages/extension"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "npm run check -w @bhoomabrsr/skimlet && npm run check -w @bhoomabrsr/skimlet-extension",
+    "test": "npm run build && node tests/verify.mjs && node tests/connection.mjs",
+    "build": "npm run build -w @bhoomabrsr/skimlet",
+    "build:extension": "npm run build -w @bhoomabrsr/skimlet-extension",
+    "start": "npm run start -w @bhoomabrsr/skimlet",
+    "test:packed": "node tests/packed.mjs"
+  },
+  "devDependencies": {
+    "@types/jsdom": "21.1.7",
+    "@types/node": "24.13.3",
+    "@types/turndown": "5.0.5",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}

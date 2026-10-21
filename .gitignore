@@ -1,0 +1,6 @@
+node_modules/
+packages/mcp/dist/
+packages/mcp/assets/
+packages/extension/dist/
+.DS_Store
+*.tgz

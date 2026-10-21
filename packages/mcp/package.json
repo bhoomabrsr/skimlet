@@ -1,0 +1,25 @@
+{
+  "name": "@bhoomabrsr/skimlet",
+  "version": "0.2.0",
+  "description": "Local Chrome-profile search and reading MCP server powered by Playwriter",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "skimlet": "dist/mcp.js" },
+  "files": ["dist/mcp.js", "dist/adapters", "dist/url.js", "assets/manifest.json"],
+  "scripts": {
+    "start": "node dist/mcp.js",
+    "check": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --esModuleInterop --skipLibCheck mcp.ts",
+    "build": "npm run build -w @bhoomabrsr/skimlet-extension && tsc --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --esModuleInterop --skipLibCheck --outDir dist mcp.ts && chmod +x dist/mcp.js",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@mozilla/readability": "0.6.0",
+    "jsdom": "26.1.0",
+    "p-limit": "7.2.0",
+    "playwriter": "0.8.0",
+    "tldts": "7.0.19",
+    "turndown": "7.2.0",
+    "zod": "4.3.5"
+  }
+}
