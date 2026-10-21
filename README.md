@@ -16,7 +16,12 @@ to summarize within five minutes (machine used: MacBook Pro M5).
 
 Requires Node.js 22+ and Chrome 125+.
 
-## Build and try locally
+## Setup
+
+Choose one way to start the MCP server. Both use the separate Chrome
+extension described below.
+
+### Local checkout
 
 ```sh
 npm ci
@@ -25,8 +30,8 @@ npm test
 npm run build
 ```
 
-Configure your MCP client to launch the built server. For clients that use
-the `mcpServers` JSON format, provide an absolute path to your checkout:
+For MCP clients that use `mcpServers` JSON, provide an absolute path to your
+checkout:
 
 ```json
 {
@@ -38,6 +43,26 @@ the `mcpServers` JSON format, provide an absolute path to your checkout:
   }
 }
 ```
+
+### Published npm package
+
+Run the published package with `npx`. No global install is required:
+
+```json
+{
+  "mcpServers": {
+    "skimlet": {
+      "command": "npx",
+      "args": ["-y", "@bhoomabrsr/skimlet"]
+    }
+  }
+}
+```
+
+### Chrome extension
+
+The npm package does not contain the extension. Clone this repository and run
+`npm ci && npm run build:extension` if you have not built it from source.
 
 In the Chrome profile you want to use, open `chrome://extensions`, enable
 **Developer mode**, select **Load unpacked**, and choose

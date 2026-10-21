@@ -1,7 +1,7 @@
 {
   "name": "@bhoomabrsr/skimlet",
-  "version": "0.2.0",
-  "description": "Local Chrome-profile search and reading MCP server powered by Playwriter",
+  "version": "0.2.1",
+  "description": "Skimlet is a local MCP server for agents doing deep research. It reads search engine results pages (SERPs) and extracts page content in batches using your Chrome profile.",
   "license": "MIT",
   "repository": {
     "type": "git",
