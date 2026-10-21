@@ -1,4 +1,10 @@
-# Skimlet
+<!-- markdownlint-disable MD033 MD041 -->
+<p align="center">
+  <img src="packages/extension/src/assets/skimlet-logo.svg" alt="Skimlet logo" width="128">
+</p>
+
+<h1 align="center">Skimlet</h1>
+<!-- markdownlint-enable MD033 MD041 -->
 
 Skimlet is a local MCP server for agents doing deep research. It reads
 search engine results pages (SERPs) and extracts page content in batches
