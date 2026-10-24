@@ -14,8 +14,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install -g npm@^11.5.1
-      - run: node -e 'const url = require("./packages/mcp/package.json").repository?.url; if (!url) throw new Error("Set repository.url to this GitHub repository before publishing")'
-      - run: test "${GITHUB_REF_NAME}" = "v$(node -p "require('./packages/mcp/package.json').version")"
+      - run: node -e 'const url = require("./packages/skimlet/package.json").repository?.url; if (!url) throw new Error("Set repository.url to this GitHub repository before publishing")'
+      - run: test "${GITHUB_REF_NAME}" = "v$(node -p "require('./packages/skimlet/package.json').version")"
       - run: npm ci
       - run: npm run check
       - run: npm test

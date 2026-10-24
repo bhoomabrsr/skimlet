@@ -7,7 +7,7 @@
 <h1 align="center">Skimlet</h1>
 <!-- markdownlint-enable MD033 MD041 -->
 
-Skimlet is a local MCP server for agents doing deep research. It reads
+Skimlet is a local Model Context Protocol (MCP) server for agents doing deep research. It reads
 search engine results pages (SERPs) and extracts page content in batches
 using your Chrome profile. Google is the first supported source; Brave, Bing,
 and Reddit are planned.
@@ -33,23 +33,22 @@ For MCP clients that use `mcpServers` JSON, run the published package with
 ```
 
 Or install it globally with `npm install -g @bhoomabrsr/skimlet` and
-configure your MCP client to run `skimlet`. Only one server can use port
-`19989` at a time.
+configure your MCP client to run `skimlet`. MCP instances share one detached
+relay on port `19989`. The relay stays online after MCP exits.
+
+Check it with `curl http://127.0.0.1:19989/version`. The `version` field reports
+this package's version. To stop the relay, find the process that owns port
+`19989`. Confirm it runs `relay-server/server.js` before you stop it.
 
 ### Install the Chrome extension
 
-The npm package contains only the MCP server. Clone the
-[Skimlet repository](https://github.com/bhoomabrsr/skimlet) to build the
-extension:
-
-```sh
-npm ci
-npm run build:extension
-```
-
-In your Chrome profile, open `chrome://extensions`, enable **Developer mode**,
-select **Load unpacked**, and choose `packages/extension/dist/`. Start the
-MCP server, then select the Skimlet icon on a web page to connect.
+Install [Skimlet from the Chrome Web Store](https://chromewebstore.google.com/detail/skimlet/fiipfignceankihmkhfjldmniofechoh)
+in your Chrome profile. If you lack Store access, clone the
+[Skimlet repository](https://github.com/bhoomabrsr/skimlet), run
+`npm ci && npm run build:extension`, and use **Load unpacked** in
+`chrome://extensions` to load `packages/extension/dist/`. The relay accepts
+both extension IDs. Start an MCP server, then select the Skimlet icon on a web
+page to connect. If the relay restarts, select the icon again to reconnect.
 
 ## Search examples
 
@@ -89,7 +88,7 @@ security notes.
 
 ## Acknowledgements
 
-Skimlet builds on [Playwriter](https://github.com/remorses/playwriter) by
-Tommaso De Rossi for its browser connection and relay. The source repository
-retains [Playwriter's MIT notice](https://github.com/bhoomabrsr/skimlet/blob/main/packages/extension/LICENSE-Playwriter.txt).
+Skimlet's extension and Chrome DevTools Protocol (CDP) bridge build on ideas from [Playwriter](https://github.com/remorses/playwriter)
+by Tommaso De Rossi. The browser connector and relay belong to Skimlet.
+The source repository retains [Playwriter's MIT notice](https://github.com/bhoomabrsr/skimlet/blob/main/packages/extension/LICENSE-Playwriter.txt).
 Skimlet itself is licensed under MIT.

@@ -7,47 +7,25 @@ import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import Turndown from 'turndown';
 import { pathToFileURL } from 'node:url';
-import { googleHost, parseGoogle, searchReadySelector, searchUrl, type Result } from './adapters/google.js';
-import { http } from './url.js';
+import { googleHost, parseGoogle, searchReadySelector, searchUrl, type Result } from '../adapters/google.js';
+import { http } from '../url.js';
 import { realpathSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
-
-/** Node-side Playwriter connection and Skimlet tab limiter. */
+import { ensureRelay, relayPort, skimletVersion } from '../relay-server/client.js';
+import { connectViaExtension, type BrowserConnection } from '../browser-client/client.js';
 import pLimit from 'p-limit';
-import type { Page, PlaywriterBrowserConnection } from 'playwriter';
+import type { Page } from 'playwright-core';
 
-// Set before Playwriter starts its relay. An already-running relay keeps its own settings.
-const relayPort = Number(process.env.SKIMLET_PORT ?? 19989);
-if (!Number.isInteger(relayPort) || relayPort < 1 || relayPort > 65535) throw new Error('Invalid SKIMLET_PORT');
-process.env.PLAYWRITER_TELEMETRY = '0';
-process.env.DO_NOT_TRACK = '1';
-
-export type Connector = () => Promise<PlaywriterBrowserConnection>;
-export const failure = (error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.startsWith('The Playwriter Chrome extension is not connected.')
-    ? 'Skimlet Chrome extension is not connected. Load Skimlet in Chrome, click its icon on a web page to attach, then retry.'
-    : message;
-};
-
-async function connect(): Promise<PlaywriterBrowserConnection> {
-  await startRelay();
-  const { connectViaExtension } = await import('playwriter');
-  return connectViaExtension({ port: relayPort,
-    tabGroup: 'Skimlet', tabGroupColor: 'blue', closeTabsOnEnd: true,
-    logger: { log: () => {} },
-  });
-}
+export type Connector = () => Promise<BrowserConnection>;
+export const failure = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 export class Extension {
   private readonly limit;
-  private connection?: Promise<PlaywriterBrowserConnection>;
+  private connection?: Promise<BrowserConnection>;
   private readonly active = new Set<Promise<unknown>>();
   private stopped = false;
   private closing?: Promise<void>;
 
-  constructor(readonly tabs = 5, private readonly connector: Connector = connect) {
+  constructor(readonly tabs = 5, private readonly connector: Connector = connectViaExtension) {
     if (!Number.isInteger(tabs) || tabs < 1 || tabs > 20) throw new Error('SKIMLET_TABS must be 1–20');
     this.limit = pLimit(tabs);
   }
@@ -112,31 +90,10 @@ export class Extension {
       this.stopped = true;
       await Promise.allSettled([...this.active]);
       const connection = await this.connection?.catch(() => undefined);
-      await connection?.close(); // Playwriter closes only this session's owned tabs.
+      await connection?.close(); // The session owns only tabs created by this connection.
     })();
   }
 }
-
-
-// This process owns port 19989. Official Playwriter retains port 19988.
-process.env.PLAYWRITER_PORT = String(relayPort);
-process.env.PLAYWRITER_PATCHRIGHT = '0';
-let relay: Promise<import('playwriter').RelayServer> | undefined;
-export function startRelay() {
-  return relay ??= (async () => {
-    const { EXTENSION_IDS, startPlayWriterCDPRelayServer } = await import('playwriter');
-    const manifest = JSON.parse(await readFile(new URL('../assets/manifest.json', import.meta.url), 'utf8'));
-    const hash = createHash('sha256').update(Buffer.from(manifest.key, 'base64')).digest('hex').slice(0, 32);
-    const extensionId = [...hash].map(n => String.fromCharCode(97 + parseInt(n, 16))).join('');
-    // Register only this extension's public identity in this relay process.
-    EXTENSION_IDS.splice(0, EXTENSION_IDS.length, extensionId);
-    return startPlayWriterCDPRelayServer({ port: relayPort, host: '127.0.0.1',
-      logger: { log() {}, error() {} },
-      cdpLogger: { log() {}, async flush() {}, logFilePath: '' },
-    }); // EADDRINUSE fails; never stop or take over another relay.
-  })();
-}
-export async function stopRelay() { (await relay?.catch(() => undefined))?.close(); relay = undefined; }
 
 
 const MAX_RESPONSE_BYTES = 10_000_000;
@@ -175,7 +132,7 @@ export const inputSchema = z.object({
 type Input = z.infer<typeof inputSchema>;
 
 export function createApp(extension = new Extension(Number(process.env.SKIMLET_TABS ?? 5))) {
-  const server = new McpServer({ name: 'skimlet', version: '0.1.0' });
+  const server = new McpServer({ name: 'skimlet', version: skimletVersion });
   const shutdown = new AbortController();
   let busy = false;
 
@@ -263,10 +220,10 @@ export function createApp(extension = new Extension(Number(process.env.SKIMLET_T
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
-  await startRelay();
-  console.error(`Skimlet ready on 127.0.0.1:${relayPort}. Click the Skimlet extension to connect.`);
+  await ensureRelay();
+  console.error(`Skimlet ready; shared relay on 127.0.0.1:${relayPort}. Click the Skimlet extension to connect.`);
   const app = createApp();
-  const close = async () => { try { await app.close(); } finally { await stopRelay(); } };
+  const close = async () => { await app.close(); };
   for (const event of ['SIGINT', 'SIGTERM'] as const) process.once(event, () => { void close().catch(console.error); });
   process.stdin.once('end', () => { void close().catch(console.error); });
   await app.server.connect(new StdioServerTransport());

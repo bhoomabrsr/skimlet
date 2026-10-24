@@ -6,7 +6,7 @@
 <h1 align="center">Skimlet</h1>
 <!-- markdownlint-enable MD033 MD041 -->
 
-Skimlet is a local MCP server for agents doing deep research. It reads
+Skimlet is a local Model Context Protocol (MCP) server for agents doing deep research. It reads
 search engine results pages (SERPs) and extracts page content in batches
 using your Chrome profile. Google is the first supported source; Brave, Bing,
 and Reddit are planned.
@@ -38,7 +38,7 @@ checkout:
   "mcpServers": {
     "skimlet": {
       "command": "node",
-      "args": ["/absolute/path/to/skimlet-final/packages/mcp/dist/mcp.js"]
+      "args": ["/absolute/path/to/skimlet-final/packages/skimlet/dist/mcp/mcp.js"]
     }
   }
 }
@@ -61,16 +61,16 @@ Run the published package with `npx`. No global install is required:
 
 ### Chrome extension
 
-The npm package does not contain the extension. Clone this repository and run
-`npm ci && npm run build:extension` if you have not built it from source.
+Install [Skimlet from the Chrome Web Store](https://chromewebstore.google.com/detail/skimlet/fiipfignceankihmkhfjldmniofechoh)
+in the Chrome profile you want to use. If you lack Store access, clone
+this repository, run `npm ci && npm run build:extension`, and load
+`packages/extension/dist/` through **Load unpacked** in `chrome://extensions`.
+The relay accepts both extension IDs.
 
-In the Chrome profile you want to use, open `chrome://extensions`, enable
-**Developer mode**, select **Load unpacked**, and choose
-`packages/extension/dist/`. With the MCP server running, click the Skimlet
-icon on a web page to attach that tab. Click it again to detach. If the
-server starts after the extension, click the icon to reconnect. Skimlet
-creates and groups its own tabs for MCP searches and closes them when the
-session ends.
+Start an MCP client, then select the Skimlet icon on a web page to attach that
+tab. Select it again to detach. The relay stays online when an MCP client
+exits. If the relay restarts, select the icon to reconnect. Skimlet closes
+the tabs it creates when their MCP session ends.
 
 ## Search examples
 
@@ -104,11 +104,13 @@ number of concurrent worker tabs, set `SKIMLET_TABS` to a value from 1 to 20
 The extension requests `activeTab`, `debugger`, and `tabGroups`. It has no
 all-URL host permissions, content scripts, toolbar injection, or credential
 storage. The relay binds to loopback and checks the extension's origin
-against its public-key-derived ID. This does not protect against other
-local processes running as you. Use trusted MCP clients only: browser
-requests may include your profile cookies, and extracted page content is
-returned to the client. The relay uses Playwriter 0.8.0 as an npm dependency;
-the Chrome extension is Skimlet's own build.
+with the Store ID or the unpacked build's manifest-derived ID. Other local
+processes with your user account can still reach the relay. Use trusted MCP
+clients only: browser requests can include your profile cookies, and MCP clients
+receive extracted page content. Skimlet owns its extension, relay, and browser
+connector. `/version.version` reports Skimlet's package version. The MCP server
+uses Playwright Core for today's searches. The relay keeps a compatible
+Chrome DevTools Protocol (CDP) command interface for future browser interactions.
 
 A real browser can help with some bot checks, but it cannot guarantee that
 you will avoid CAPTCHAs.
@@ -116,6 +118,6 @@ you will avoid CAPTCHAs.
 ## Acknowledgements
 
 Skimlet builds on the work of [Playwriter](https://github.com/remorses/playwriter)
-and its maintainer, Tommaso De Rossi. Playwriter provides the browser
-connection and relay that Skimlet uses, and its Chrome extension architecture
-helped shape this project. Thank you for making that work available.
+and its maintainer, Tommaso De Rossi. Playwriter's extension and CDP design
+helped shape Skimlet's protocol. The current search flow has no Playwriter
+runtime dependency.

@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Skimlet",
+  "version": "0.2.0",
+  "minimum_chrome_version": "125",
+  "description": "Connect Chrome to Skimlet for search results and batch page extraction.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA22f9tfKFVDXsxNIIM0q1EgXhuqmV/CdkV4NmSzIK13VkrTuk9za9PtOjYhW8khdF5N9rap9CUL/XMqavWLqiLz5H80ZXMXTlc4cx1G+87IEa7jkR4fiuI+5GaEADk0SrWPe2m0qc91ebVfb+pUG1vUweeX1k9Mhx7WXjGt9mMi+DCMt1OHAwF9KONu/w4qx+1jZJ3CHxsYBtQjcxQ6qaISpGF1sqzDjewBJpgJ8QLoF8qTrId/JrhS0JkcQnLpgy+mn1yuXoS587k6gdB7d+Q7aGPV8ymuSiJji132Gsf69ltZF2OXIxnef1rZtIbxh8MZnACOTdfD47jj4tLzWGIQIDAQAB",
+  "permissions": [
+    "activeTab",
+    "debugger",
+    "tabGroups"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Attach this tab to Skimlet",
+    "default_icon": "icons/off.png"
+  },
+  "icons": {
+    "32": "icons/off.png",
+    "128": "icons/store-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src ws://127.0.0.1:19989"
+  }
+}

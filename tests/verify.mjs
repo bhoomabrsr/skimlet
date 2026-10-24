@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
-import { Extension, createApp, extract, failure } from '../packages/mcp/dist/mcp.js';
-import { parseGoogle, searchUrl as googleSearchUrl } from '../packages/mcp/dist/adapters/google.js';
+import { Extension, createApp, extract, failure } from '../packages/skimlet/dist/mcp/mcp.js';
+import { skimletVersion } from '../packages/skimlet/dist/relay-server/client.js';
+import { parseGoogle, searchUrl as googleSearchUrl } from '../packages/skimlet/dist/adapters/google.js';
 const appRoot = new URL('../', import.meta.url).pathname;
-const require = createRequire(new URL('../packages/mcp/package.json', import.meta.url));
+const require = createRequire(new URL('../packages/skimlet/package.json', import.meta.url));
 const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { InMemoryTransport } = require('@modelcontextprotocol/sdk/inMemory.js');
 const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
@@ -121,9 +123,9 @@ async function mcp(extension, run) {
   await app.server.connect(a); await client.connect(b);
   try { await run(client); } finally { await client.close(); await app.close(); }
 }
-test('MCP: disconnected browser points to Skimlet, not Playwriter', async () => {
+test('MCP: disconnected browser points to Skimlet', async () => {
   assert.equal(failure(new Error('port busy')), 'port busy');
-  const extension = { async ready() { throw new Error('The Playwriter Chrome extension is not connected.\nInstall the Playwriter extension.'); }, async close() {} };
+  const extension = { async ready() { throw new Error('Skimlet Chrome extension is not connected. Click its icon to attach.'); }, async close() {} };
   await mcp(extension, async client => {
     const reply = await client.callTool({ name: 'search', arguments: { queries: ['test'], includeContent: false } });
     assert.equal(reply.isError, true);
@@ -166,15 +168,30 @@ test('MCP: real stdio handshake and tool discovery', async () => {
   await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
   const port = probe.address().port;
   await new Promise(resolve => probe.close(resolve));
-  const transport = new StdioClientTransport({ command: process.execPath, args: ['packages/mcp/dist/mcp.js'], cwd: appRoot, env: { ...process.env, SKIMLET_PORT: String(port) }, stderr: 'pipe' });
-  let stderr = ''; transport.stderr?.on('data', chunk => { stderr += chunk; });
-  const client = new Client({ name: 'stdio-test', version: '1' });
-  await client.connect(transport);
-  assert.equal((await client.listTools()).tools[0].name, 'search');
-  await client.close(); assert.doesNotMatch(stderr, /Error:/);
+  const relay = spawn(process.execPath, ['packages/skimlet/dist/relay-server/server.js'],
+    { cwd: appRoot, env: { ...process.env, SKIMLET_PORT: String(port) }, stdio: 'ignore' });
+  try {
+    let ready = false;
+    for (let i = 0; i < 50 && !ready; i++) {
+      await delay(100);
+      ready = await fetch(`http://127.0.0.1:${port}/version`).then(response => response.ok).catch(() => false);
+    }
+    assert.ok(ready, 'Detached relay did not start');
+    const transport = new StdioClientTransport({ command: process.execPath, args: ['packages/skimlet/dist/mcp/mcp.js'], cwd: appRoot,
+      env: { ...process.env, SKIMLET_PORT: String(port) }, stderr: 'pipe' });
+    let stderr = ''; transport.stderr?.on('data', chunk => { stderr += chunk; });
+    const client = new Client({ name: 'stdio-test', version: '1' });
+    try {
+      await client.connect(transport);
+      assert.equal((await client.listTools()).tools[0].name, 'search');
+      await client.close();
+      assert.equal((await (await fetch(`http://127.0.0.1:${port}/version`)).json()).version, skimletVersion);
+      assert.doesNotMatch(stderr, /Error:/);
+    } finally { await client.close().catch(() => {}); }
+  } finally { relay.kill('SIGTERM'); }
 });
 test('Real local Chromium: rendered HTML, context cookies, human tab untouched, navigation cancellation', async () => {
-  const { chromium } = require('@xmorse/playwright-core');
+  const { chromium } = require('playwright-core');
   const server = createServer((req, res) => {
     if (req.url === '/hang') return;
     res.writeHead(200, { 'content-type': 'text/html' });
